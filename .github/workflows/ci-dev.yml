@@ -1,0 +1,88 @@
+name: CI - Development
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  ci-dev:
+    name: ci-dev
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/pakvista-cicd
+
+    steps:
+      # Step 1: Download the Pull Request code.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Additional setup required for HTMLHint, Stylelint and Parcel.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 2: Lint HTML/CSS and build the static website.
+      - name: Lint HTML and CSS
+        run: npm run lint
+
+      - name: Build website with Parcel
+        run: npm run build
+
+      # Step 3: Authenticate with Docker Hub.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 4: Build the image first without pushing it.
+      - name: Build Docker image without pushing
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:dev-build
+
+      # Step 5: Apply environment-specific Docker tags.
+      - name: Tag development Docker image
+        shell: bash
+        run: |
+          docker tag "${IMAGE_NAME}:dev-build" "${IMAGE_NAME}:dev-latest"
+          docker tag "${IMAGE_NAME}:dev-build" "${IMAGE_NAME}:dev-${GITHUB_SHA}"
+
+          echo "Created tags:"
+          echo "${IMAGE_NAME}:dev-latest"
+          echo "${IMAGE_NAME}:dev-${GITHUB_SHA}"
+
+      # Step 6: Rebuild and push both tags to Docker Hub.
+      - name: Build and push development Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:dev-latest
+            ${{ env.IMAGE_NAME }}:dev-${{ github.sha }}
+
+      - name: Confirm successful image push
+        shell: bash
+        run: |
+          echo "Development Docker images pushed successfully."
+          echo "Latest tag: ${IMAGE_NAME}:dev-latest"
+          echo "SHA tag: ${IMAGE_NAME}:dev-${GITHUB_SHA}"
