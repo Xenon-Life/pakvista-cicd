@@ -60,6 +60,10 @@ a {
   text-decoration: none;
 }
 
+.destination-card a {
+  font-weight: 700;
+}
+
 a:hover,
 a:focus {
   text-decoration: underline;
@@ -223,10 +227,6 @@ img {
 
 .destination-card h3 {
   margin-bottom: 12px;
-}
-
-.destination-card a {
-  font-weight: 700;
 }
 
 .content-grid {
