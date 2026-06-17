@@ -1,0 +1,50 @@
+name: CI - Production
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci-prod:
+    name: ci-prod
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint project
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        run: docker build -t app:test .
+
+      - name: Build and push production image
+        run: |
+          docker build \
+          -t ${{ secrets.DOCKERHUB_USERNAME }}/pakvista:prod-latest \
+          -t ${{ secrets.DOCKERHUB_USERNAME }}/pakvista:prod-${{ github.sha }} .
+
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/pakvista:prod-latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/pakvista:prod-${{ github.sha }}
+
+      - name: Confirmation
+        run: echo "Production CI completed successfully"
