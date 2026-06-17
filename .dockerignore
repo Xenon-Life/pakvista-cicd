@@ -1,0 +1,9 @@
+node_modules
+dist
+.parcel-cache
+.git
+.github
+.vscode
+.env
+*.docx
+npm-debug.log
