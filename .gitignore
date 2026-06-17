@@ -6,12 +6,10 @@ dist/
 .parcel-cache/
 
 # Environment files
-.env
-.env.*
 
 # Operating system files
 .DS_Store
 Thumbs.db
 
 # Editor files
-.vscode/
+config.bat

@@ -6,8 +6,8 @@
     "lint:html": "htmlhint \"*.html\"",
     "lint:css": "stylelint \"*.css\"",
     "lint": "npm run lint:html && npm run lint:css",
-    "build": "parcel build index.html lahore.html hunza.html karachi.html swat.html --dist-dir dist --public-url ./",
-    "start": "parcel index.html"
+    "build": "node init && parcel build index.html lahore.html hunza.html karachi.html swat.html --dist-dir dist --public-url ./",
+    "start": "node init && parcel index.html"
   },
   "repository": {
     "type": "git",
